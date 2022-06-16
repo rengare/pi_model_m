@@ -6,8 +6,8 @@ from kmk.extensions import lock_status
 from kb import KMKKeyboard
 import digitalio
 import board
-print("Starting")
 
+print("Starting")
 
 keyboard = KMKKeyboard()
 
