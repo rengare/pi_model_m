@@ -14,6 +14,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "quantum.h"
+#include "config.h"
+
+#define MATRIX_HAS_GHOST
 
 void led_init_ports(void) {
   /* Setting status LEDs pins to output and +5V (off) */
@@ -23,12 +26,19 @@ void led_init_ports(void) {
   gpio_write_pin_high(GP28);
 }
 
-bool led_update_kb(led_t led_state) {
-  bool res = led_update_user(led_state);
-  if(res) {
-    gpio_write_pin(GP27, !led_state.caps_lock);
-    gpio_write_pin(GP28, !led_state.num_lock);
-    // gpio_write_pin(B5, !led_state.scroll_lock);
-  }
-  return res;
+// Global timeout threshold in milliseconds
+#define GHOST_TIMEOUT 1
+uint16_t last_keypress_time = 0;
+
+bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+    if (record->event.pressed) {
+        // Check if this key was pressed too soon after the last one
+        if (timer_elapsed(last_keypress_time) <= GHOST_TIMEOUT) {
+            return false; // Block likely phantom key
+        }
+
+        // Update timer for this keypress
+        last_keypress_time = timer_read();
+    }
+    return true; // Allow key
 }
